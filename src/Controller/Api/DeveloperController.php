@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class DeveloperController extends AbstractController
@@ -41,10 +42,16 @@ final class DeveloperController extends AbstractController
     }
 
     #[Route('/api/developer', name: 'app_api_developer_create', methods: ['POST'])]
-    public function create(Request $request, SerializerInterface $serializer, EntityManagerInterface $em): JsonResponse
+    public function create(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $addJsonDev = $request->getContent();
         $objectDev = $serializer->deserialize($addJsonDev, Developer::class, 'json');
+                
+        $errors = $validator->validate($objectDev);
+        
+        if (count($errors) > 0) {
+            return $this->json($errors, 422);
+        }
         
         $em->persist($objectDev);
         $em->flush();  
@@ -53,12 +60,18 @@ final class DeveloperController extends AbstractController
     }
 
     #[Route('/api/developer/{id}', name: 'app_api_developer_update', methods: ['PUT', 'PATCH'])]
-    public function update(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, Developer $developer): JsonResponse
+    public function update(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, Developer $developer, ValidatorInterface $validator): JsonResponse
     {
         $updateJsonDev = $request->getContent();
         $objectDev = $serializer->deserialize($updateJsonDev, Developer::class, 'json',
             ["object_to_populate" => $developer ]
         );
+        
+        $errors = $validator->validate($objectDev);
+        
+        if (count($errors) > 0) {
+            return $this->json($errors, 422);
+        }
         
         $em->persist($objectDev);
         $em->flush();  

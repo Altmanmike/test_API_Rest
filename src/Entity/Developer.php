@@ -2,9 +2,10 @@
 
 namespace App\Entity;
 
-use App\Repository\DeveloperRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\DeveloperRepository;
 
 #[ORM\Entity(repositoryClass: DeveloperRepository::class)]
 class Developer
@@ -14,6 +15,13 @@ class Developer
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Assert\NotBlank]
+    #[Assert\Length(
+        min: 2,
+        max: 255,
+        minMessage: 'Your title must be at least {{ limit }} characters long',
+        maxMessage: 'Your title cannot be longer than {{ limit }} characters',
+    )]
     #[ORM\Column(length: 255)]
     private ?string $title = null;
 
@@ -23,15 +31,16 @@ class Developer
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private ?array $companies = null;
 
+    #[Assert\PositiveOrZero]
     #[ORM\Column]
     private ?int $experience = null;
     
     #[ORM\Column(options: ['default' => false])]
-    private ?bool $isParticipant = null;
+    private ?bool $isParticipant = null;    
     
     #[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])] 
     private ?\DateTimeImmutable $createdAt = null;
-    
+        
     #[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])] 
     private ?\DateTimeImmutable $updatedAt = null;
 
