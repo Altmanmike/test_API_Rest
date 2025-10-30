@@ -5,10 +5,10 @@ namespace App\Controller\Api;
 use App\Entity\Developer;
 use App\Repository\DeveloperRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class DeveloperController extends AbstractController
@@ -37,24 +37,32 @@ final class DeveloperController extends AbstractController
         $em->remove($developer);
         $em->flush();
         
-        return $this->json('', 200);
+        return $this->json('resource deleted', 200);
     }
 
     #[Route('/api/developer', name: 'app_api_developer_create', methods: ['POST'])]
-    public function create(): JsonResponse
+    public function create(Request $request, SerializerInterface $serializer, EntityManagerInterface $em): JsonResponse
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/Api/DeveloperController.php',
-        ]);
+        $addJsonDev = $request->getContent();
+        $objectDev = $serializer->deserialize($addJsonDev, Developer::class, 'json');
+        
+        $em->persist($objectDev);
+        $em->flush();  
+        
+        return $this->json('resource added', 204);
     }
 
-    #[Route('/api/developer', name: 'app_api_developer', methods: ['PUT', 'PATCH'])]
-    public function update(): JsonResponse
+    #[Route('/api/developer/{id}', name: 'app_api_developer_update', methods: ['PUT', 'PATCH'])]
+    public function update(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, Developer $developer): JsonResponse
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/Api/DeveloperController.php',
-        ]);
+        $updateJsonDev = $request->getContent();
+        $objectDev = $serializer->deserialize($updateJsonDev, Developer::class, 'json',
+            ["object_to_populate" => $developer ]
+        );
+        
+        $em->persist($objectDev);
+        $em->flush();  
+        
+        return $this->json('resource updated', 204);
     }
 }
